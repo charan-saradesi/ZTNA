@@ -9,14 +9,31 @@ type Org = {
     name: string;
     display_name: string | null;
     website_url: string | null;
+    auth_user_id: string | null;
     created_at: string;
 };
 
-type FormState = { name: string; display_name: string; website_url: string };
-const EMPTY: FormState = { name: "", display_name: "", website_url: "" };
+type FormState = { name: string; display_name: string; website_url: string; password: string };
+const EMPTY: FormState = { name: "", display_name: "", website_url: "", password: "" };
 const PAGE_SIZE = 10;
 
-const slug = (s: string) => s.trim().toLowerCase().replace(/\s+/g, "-");
+// Calls the manage-organization Edge Function. Returns an error message, or "" on success.
+async function callFn(body: Record<string, unknown>): Promise<string> {
+    const { data, error } = await supabase.functions.invoke("manage-organization", { body });
+    if (error) {
+        const ctx = (error as { context?: Response }).context;
+        if (ctx) {
+            try {
+                const j = await ctx.json();
+                if (j?.error) return j.error as string;
+            } catch {
+                /* ignore */
+            }
+        }
+        return error.message;
+    }
+    return (data?.error as string | undefined) ?? "";
+}
 
 export default function OrganizationsPage() {
     const [orgs, setOrgs] = useState<Org[]>([]);
@@ -68,7 +85,7 @@ export default function OrganizationsPage() {
 
     const openEdit = (o: Org) => {
         setEditing(o);
-        setForm({ name: o.name, display_name: o.display_name ?? "", website_url: o.website_url ?? "" });
+        setForm({ name: o.name, display_name: o.display_name ?? "", website_url: o.website_url ?? "", password: "" });
         setFormError("");
         setOpen(true);
     };
@@ -78,31 +95,33 @@ export default function OrganizationsPage() {
         setSaving(true);
         setFormError("");
 
-        const payload = {
-            display_name: form.display_name.trim() || null,
-            website_url: form.website_url.trim() || null,
-        };
-
-        const res = editing
-            ? await supabase.from("organizations").update(payload).eq("id", editing.id)
-            : await supabase.from("organizations").insert({ name: slug(form.name), ...payload });
+        const msg = editing
+            ? await callFn({
+                  action: "update",
+                  id: editing.id,
+                  display_name: form.display_name.trim(),
+                  website_url: form.website_url.trim(),
+                  password: form.password,
+              })
+            : await callFn({
+                  action: "create",
+                  name: form.name,
+                  display_name: form.display_name.trim(),
+                  website_url: form.website_url.trim(),
+                  password: form.password,
+              });
 
         setSaving(false);
+        if (msg) return setFormError(msg);
 
-        if (res.error) {
-            setFormError(
-                res.error.code === "23505" ? "An organization with this name already exists" : res.error.message
-            );
-            return;
-        }
         setOpen(false);
         await load();
     };
 
     const remove = async (o: Org) => {
-        if (!window.confirm(`Delete organization "${o.name}"?`)) return;
-        const { error: err } = await supabase.from("organizations").delete().eq("id", o.id);
-        if (err) setError(err.message);
+        if (!window.confirm(`Delete organization "${o.name}" and its login?`)) return;
+        const msg = await callFn({ action: "delete", id: o.id });
+        if (msg) setError(msg);
         else await load();
     };
 
@@ -138,6 +157,7 @@ export default function OrganizationsPage() {
                             <th>Created time</th>
                             <th>Display name</th>
                             <th>Website URL</th>
+                            <th>Login</th>
                             <th style={{ textAlign: "right" }}>Action</th>
                         </tr>
                     </thead>
@@ -148,6 +168,9 @@ export default function OrganizationsPage() {
                                 <td className="num">{new Date(o.created_at).toLocaleString()}</td>
                                 <td>{o.display_name ?? "—"}</td>
                                 <td>{o.website_url ?? "—"}</td>
+                                <td style={{ color: o.auth_user_id ? "#4ade80" : "#8b8b8b" }}>
+                                    {o.auth_user_id ? "Enabled" : "No login"}
+                                </td>
                                 <td>
                                     <div className="act">
                                         <button className="btn sm" onClick={() => openEdit(o)}>Edit</button>
@@ -193,7 +216,28 @@ export default function OrganizationsPage() {
                                 disabled={!!editing}
                                 required
                             />
-                            <small>{editing ? "Name can't be changed" : "Unique, lowercase. Spaces become dashes."}</small>
+                            <small>
+                                {editing
+                                    ? "Name can't be changed. It is the organization's login name."
+                                    : "Unique, lowercase. This is the name used to log in."}
+                            </small>
+                        </label>
+
+                        <label className="mf">
+                            Password
+                            <input
+                                type="password"
+                                value={form.password}
+                                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                                placeholder={editing ? "Leave blank to keep the current one" : "At least 6 characters"}
+                                autoComplete="new-password"
+                                required={!editing}
+                            />
+                            <small>
+                                {editing && !editing.auth_user_id
+                                    ? "This organization has no login yet. Enter a password to create one."
+                                    : "Used on the Organization tab of the login page."}
+                            </small>
                         </label>
 
                         <label className="mf">

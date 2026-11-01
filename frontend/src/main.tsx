@@ -8,6 +8,10 @@ import AdminLayout from "./AdminLayout";
 import AdminDashboard from "./AdminDashboard";
 import OrganizationsPage from "./OrganizationsPage";
 import ComingSoon from "./ComingSoon";
+import OrgLayout from "./organization/OrgLayout";
+import OrganizationDashboard from "./organization/OrganizationDashboard";
+import GroupsPage from "./organization/GroupsPage";
+import UsersPage from "./organization/UsersPage";
 import { RequireUser, RequireRole } from "./guards";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -38,11 +42,14 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="*" element={<ComingSoon />} />
                     </Route>
 
-                    {/* Organization (Supabase, role = organization): placeholder for now */}
-                    <Route
-                        path="/organization"
-                        element={<RequireRole role="organization"><div style={{ padding: 24 }}>Organization Dashboard</div></RequireRole>}
-                    />
+                    {/* Organization (Supabase, role = organization) */}
+                    <Route path="/organization" element={<RequireRole role="organization"><OrgLayout /></RequireRole>}>
+                        <Route index element={<Navigate to="dashboard" replace />} />
+                        <Route path="dashboard" element={<OrganizationDashboard />} />
+                        <Route path="groups" element={<GroupsPage />} />
+                        <Route path="users" element={<UsersPage />} />
+                        <Route path="*" element={<ComingSoon />} />
+                    </Route>
 
                     <Route path="*" element={<Navigate to="/login" replace />} />
                 </Routes>
