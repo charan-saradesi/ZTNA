@@ -4,7 +4,10 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ClerkProvider } from "@clerk/react";
 import Login from "./Login";
 import UserDashboard from "./UserDashboard";
+import AdminLayout from "./AdminLayout";
 import AdminDashboard from "./AdminDashboard";
+import OrganizationsPage from "./OrganizationsPage";
+import ComingSoon from "./ComingSoon";
 import { RequireUser, RequireRole } from "./guards";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -28,7 +31,12 @@ createRoot(document.getElementById("root")!).render(
                     <Route path="/dashboard" element={<RequireUser><UserDashboard /></RequireUser>} />
 
                     {/* Admin (Supabase, role = admin) */}
-                    <Route path="/admin" element={<RequireRole role="admin"><AdminDashboard /></RequireRole>} />
+                    <Route path="/admin" element={<RequireRole role="admin"><AdminLayout /></RequireRole>}>
+                        <Route index element={<Navigate to="dashboard" replace />} />
+                        <Route path="dashboard" element={<AdminDashboard />} />
+                        <Route path="organizations" element={<OrganizationsPage />} />
+                        <Route path="*" element={<ComingSoon />} />
+                    </Route>
 
                     {/* Organization (Supabase, role = organization): placeholder for now */}
                     <Route
