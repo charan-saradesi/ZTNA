@@ -48,3 +48,60 @@
 .av-ok{color:#4ade80}
 .av-bad{color:#8b8b8b}
 .av-chart-empty{height:240px;display:grid;place-items:center;color:#8b8b8b;font-size:14px}
+
+/* ---------- Organizations page: summary, badges, menu, cards, form ---------- */
+.av-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.av-sum-card{background:#141414;border:1px solid #2a2a2a;border-radius:12px;padding:14px 16px}
+.av-sum-card span{display:block;font-size:12px;color:#8b8b8b;margin-bottom:6px}
+.av-sum-card b{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+
+.av-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.av-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.av-badge.active{color:#4ade80;background:rgba(74,222,128,.12)}
+.av-badge.disabled{color:#f87171;background:rgba(248,113,113,.12)}
+.av-badge.nologin{color:#a3a3a3;background:#1c1c1c;margin-top:4px}
+
+.av-org-name{font-weight:600}
+.av-sub-text{display:block;font-size:12px;color:#8b8b8b;margin-top:2px;word-break:break-all}
+.av-sub-text a{color:#b9a5ff;text-decoration:none}
+.av-sub-text a:hover{text-decoration:underline}
+
+.av-menu-bg{position:fixed;inset:0;z-index:59}
+.av-menu{position:fixed;z-index:60;min-width:190px;background:#141414;border:1px solid #2a2a2a;border-radius:10px;padding:6px;box-shadow:0 12px 32px rgba(0,0,0,.55)}
+.av-menu button{width:100%;display:flex;align-items:center;gap:8px;background:none;border:0;color:#f2f2f2;font-size:14px;padding:9px 10px;border-radius:7px;cursor:pointer;text-align:left;font-family:inherit}
+.av-menu button:hover{background:#1f1f1f}
+.av-menu button.danger{color:#ef4444}
+.av-menu hr{border:0;border-top:1px solid #2a2a2a;margin:6px 0}
+
+.av-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.av-org-card{background:#141414;border:1px solid #2a2a2a;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.av-org-card.is-disabled{opacity:.72}
+.av-card-head{display:flex;align-items:center;gap:12px}
+.av-avatar{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#9b7bff,#5a3bd6);display:grid;place-items:center;font-weight:700;font-size:16px;flex-shrink:0}
+.av-card-head .grow{flex:1;min-width:0}
+.av-card-head strong{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.av-lines{display:flex;flex-direction:column;gap:7px;font-size:13px;color:#c4c4c4}
+.av-lines div{display:flex;align-items:center;gap:8px;min-width:0}
+.av-lines svg{color:#8b8b8b;flex-shrink:0}
+.av-lines span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av-card-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.av-card-stats div{background:#101010;border:1px solid #232323;border-radius:10px;padding:10px 12px}
+.av-card-stats small{display:block;font-size:11px;color:#8b8b8b}
+.av-card-stats b{font-size:18px}
+.av-card-actions{display:flex;gap:8px;margin-top:auto}
+.av-card-actions .btn{flex:1;justify-content:center}
+.av-card-actions .btn.icon{flex:0 0 38px;padding:0}
+
+.av-wide{max-width:760px !important}
+.av-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.av-span2{grid-column:1 / -1}
+@media (max-width:640px){.av-form-grid{grid-template-columns:1fr}}
+.av-section-title{margin:6px 0 -4px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8b8b8b}
+.mf select,.mf textarea{border:1px solid #2a2a2a;border-radius:8px;background:#0f0f0f;color:#f2f2f2;padding:0 12px;font-size:14px;outline:0;font-family:inherit}
+.mf select{height:40px}
+.mf textarea{padding:10px 12px;min-height:76px;resize:vertical}
+.mf select:focus,.mf textarea:focus{border-color:#7c5cff;box-shadow:0 0 0 3px rgba(124,92,255,.25)}
+
+.av-notice{margin:0;font-size:14px;color:#4ade80;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.25);border-radius:10px;padding:10px 14px}
+.av-warn{margin:0;font-size:13px;color:#fbbf24;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:10px 14px}
+.av-info{margin:0;font-size:13px;color:#a3a3a3;line-height:1.5}
