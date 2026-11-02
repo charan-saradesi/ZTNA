@@ -1,44 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { Plus, RefreshCw, Search, X, Loader2 } from "lucide-react";
-import { supabase } from "./supabase";
+import { useAdminData, invokeFn, groupLabel, fullName } from "./adminData";
+import type { Org } from "./adminData";
 import "./admin.css";
-
-type Org = {
-    id: string;
-    name: string;
-    display_name: string | null;
-    website_url: string | null;
-    auth_user_id: string | null;
-    created_at: string;
-};
+import "./adminviews.css";
 
 type FormState = { name: string; display_name: string; website_url: string; password: string };
 const EMPTY: FormState = { name: "", display_name: "", website_url: "", password: "" };
 const PAGE_SIZE = 10;
 
-// Calls the manage-organization Edge Function. Returns an error message, or "" on success.
-async function callFn(body: Record<string, unknown>): Promise<string> {
-    const { data, error } = await supabase.functions.invoke("manage-organization", { body });
-    if (error) {
-        const ctx = (error as { context?: Response }).context;
-        if (ctx) {
-            try {
-                const j = await ctx.json();
-                if (j?.error) return j.error as string;
-            } catch {
-                /* ignore */
-            }
-        }
-        return error.message;
-    }
-    return (data?.error as string | undefined) ?? "";
-}
-
 export default function OrganizationsPage() {
-    const [orgs, setOrgs] = useState<Org[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+    const { orgs, groups, users, loading, error: loadError, reload } = useAdminData();
+
+    const [actionError, setActionError] = useState("");
     const [q, setQ] = useState("");
     const [page, setPage] = useState(1);
 
@@ -48,27 +23,25 @@ export default function OrganizationsPage() {
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState("");
 
-    const load = useCallback(async () => {
-        setLoading(true);
-        setError("");
-        const { data, error: err } = await supabase
-            .from("organizations")
-            .select("*")
-            .order("created_at", { ascending: false });
-        if (err) setError(err.message);
-        else setOrgs((data ?? []) as Org[]);
-        setLoading(false);
-    }, []);
+    const [viewing, setViewing] = useState<Org | null>(null);
 
-    useEffect(() => {
-        load();
-    }, [load]);
+    // How many groups / users each organization has
+    const counts = useMemo(() => {
+        const g = new Map<string, number>();
+        const u = new Map<string, number>();
+        groups.forEach((x) => g.set(x.org_name, (g.get(x.org_name) ?? 0) + 1));
+        users.forEach((x) => u.set(x.org_name, (u.get(x.org_name) ?? 0) + 1));
+        return { g, u };
+    }, [groups, users]);
 
     const filtered = useMemo(() => {
         const t = q.trim().toLowerCase();
         if (!t) return orgs;
         return orgs.filter(
-            (o) => o.name.toLowerCase().includes(t) || (o.display_name ?? "").toLowerCase().includes(t)
+            (o) =>
+                o.name.toLowerCase().includes(t) ||
+                (o.display_name ?? "").toLowerCase().includes(t) ||
+                (o.website_url ?? "").toLowerCase().includes(t)
         );
     }, [orgs, q]);
 
@@ -96,14 +69,14 @@ export default function OrganizationsPage() {
         setFormError("");
 
         const msg = editing
-            ? await callFn({
+            ? await invokeFn("manage-organization", {
                   action: "update",
                   id: editing.id,
                   display_name: form.display_name.trim(),
                   website_url: form.website_url.trim(),
                   password: form.password,
               })
-            : await callFn({
+            : await invokeFn("manage-organization", {
                   action: "create",
                   name: form.name,
                   display_name: form.display_name.trim(),
@@ -115,15 +88,40 @@ export default function OrganizationsPage() {
         if (msg) return setFormError(msg);
 
         setOpen(false);
-        await load();
+        await reload();
     };
 
     const remove = async (o: Org) => {
-        if (!window.confirm(`Delete organization "${o.name}" and its login?`)) return;
-        const msg = await callFn({ action: "delete", id: o.id });
-        if (msg) setError(msg);
-        else await load();
+        setActionError("");
+        const userCount = counts.u.get(o.name) ?? 0;
+        if (userCount > 0) {
+            setActionError(
+                `"${o.name}" still has ${userCount} user${userCount === 1 ? "" : "s"}. Delete its users first (Users page), then delete the organization.`
+            );
+            return;
+        }
+        const groupCount = counts.g.get(o.name) ?? 0;
+        const extra = groupCount > 0 ? ` Its ${groupCount} group${groupCount === 1 ? "" : "s"} will be deleted too.` : "";
+        if (!window.confirm(`Delete organization "${o.name}" and its login?${extra}`)) return;
+
+        const msg = await invokeFn("manage-organization", { action: "delete", id: o.id });
+        if (msg) setActionError(msg);
+        else await reload();
     };
+
+    // ---- details for the "View" window ----
+    const view = useMemo(() => {
+        if (!viewing) return null;
+        const gs = groups.filter((g) => g.org_name === viewing.name);
+        const us = users.filter((u) => u.org_name === viewing.name);
+        return {
+            groups: gs.map((g) => ({ g, members: us.filter((u) => u.group_id === g.id) })),
+            ungrouped: us.filter((u) => !u.group_id || !gs.some((g) => g.id === u.group_id)),
+            userTotal: us.length,
+        };
+    }, [viewing, groups, users]);
+
+    const error = actionError || loadError;
 
     return (
         <div className="adm-page">
@@ -138,7 +136,7 @@ export default function OrganizationsPage() {
                             placeholder="Search organizations"
                         />
                     </div>
-                    <button className="btn" onClick={load} aria-label="Refresh" title="Refresh">
+                    <button className="btn" onClick={reload} aria-label="Refresh" title="Refresh">
                         <RefreshCw size={15} className={loading ? "spin" : ""} />
                     </button>
                     <button className="btn primary" onClick={openAdd}>
@@ -150,14 +148,16 @@ export default function OrganizationsPage() {
             {error && <p className="err">{error}</p>}
 
             <div className="tbl-wrap">
-                <table className="tbl">
+                <table className="tbl" style={{ minWidth: 980 }}>
                     <thead>
                         <tr>
                             <th>Name</th>
-                            <th>Created time</th>
                             <th>Display name</th>
                             <th>Website URL</th>
+                            <th>Groups</th>
+                            <th>Users</th>
                             <th>Login</th>
+                            <th>Created time</th>
                             <th style={{ textAlign: "right" }}>Action</th>
                         </tr>
                     </thead>
@@ -165,14 +165,17 @@ export default function OrganizationsPage() {
                         {rows.map((o) => (
                             <tr key={o.id}>
                                 <td>{o.name}</td>
-                                <td className="num">{new Date(o.created_at).toLocaleString()}</td>
                                 <td>{o.display_name ?? "—"}</td>
                                 <td>{o.website_url ?? "—"}</td>
-                                <td style={{ color: o.auth_user_id ? "#4ade80" : "#8b8b8b" }}>
+                                <td className="av-num">{counts.g.get(o.name) ?? 0}</td>
+                                <td className="av-num">{counts.u.get(o.name) ?? 0}</td>
+                                <td className={o.auth_user_id ? "av-ok" : "av-bad"}>
                                     {o.auth_user_id ? "Enabled" : "No login"}
                                 </td>
+                                <td className="num">{new Date(o.created_at).toLocaleString()}</td>
                                 <td>
                                     <div className="act">
+                                        <button className="btn sm" onClick={() => setViewing(o)}>View</button>
                                         <button className="btn sm" onClick={() => openEdit(o)}>Edit</button>
                                         <button className="btn sm danger" onClick={() => remove(o)}>Delete</button>
                                     </div>
@@ -197,6 +200,7 @@ export default function OrganizationsPage() {
                 </div>
             </div>
 
+            {/* ---- Add / Edit window ---- */}
             {open && (
                 <div className="modal-bg" onMouseDown={() => !saving && setOpen(false)}>
                     <form className="modal" onSubmit={save} onMouseDown={(e) => e.stopPropagation()}>
@@ -267,6 +271,92 @@ export default function OrganizationsPage() {
                             </button>
                         </div>
                     </form>
+                </div>
+            )}
+
+            {/* ---- Details window ---- */}
+            {viewing && view && (
+                <div className="modal-bg" onMouseDown={() => setViewing(null)}>
+                    <div className="modal av-modal" onMouseDown={(e) => e.stopPropagation()}>
+                        <div className="modal-head">
+                            <h2>{viewing.display_name || viewing.name}</h2>
+                            <button type="button" className="adm-icon-btn" onClick={() => setViewing(null)} aria-label="Close">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="av-rows">
+                            <div className="av-row"><span>Login name</span><b>{viewing.name}</b></div>
+                            <div className="av-row"><span>Display name</span><b>{viewing.display_name ?? "—"}</b></div>
+                            <div className="av-row">
+                                <span>Website</span>
+                                <b>
+                                    {viewing.website_url ? (
+                                        <a href={viewing.website_url} target="_blank" rel="noreferrer" style={{ color: "#b9a5ff" }}>
+                                            {viewing.website_url}
+                                        </a>
+                                    ) : "—"}
+                                </b>
+                            </div>
+                            <div className="av-row">
+                                <span>Login</span>
+                                <b className={viewing.auth_user_id ? "av-ok" : "av-bad"}>
+                                    {viewing.auth_user_id ? "Enabled" : "No login"}
+                                </b>
+                            </div>
+                            <div className="av-row"><span>Created</span><b>{new Date(viewing.created_at).toLocaleString()}</b></div>
+                            <div className="av-row"><span>Groups</span><b>{view.groups.length}</b></div>
+                            <div className="av-row"><span>Users</span><b>{view.userTotal}</b></div>
+                        </div>
+
+                        <h3 className="av-h3">Groups and members</h3>
+
+                        {view.groups.length === 0 && view.ungrouped.length === 0 && (
+                            <div className="av-muted" style={{ fontSize: 14 }}>
+                                This organization has no groups or users yet.
+                            </div>
+                        )}
+
+                        {view.groups.map(({ g, members }) => (
+                            <div key={g.id} className="av-block">
+                                <div className="av-block-head">
+                                    <strong>{groupLabel(g)}</strong>
+                                    <span className="av-count">{members.length} user{members.length === 1 ? "" : "s"}</span>
+                                </div>
+                                {members.length === 0 ? (
+                                    <span className="av-muted" style={{ fontSize: 13 }}>No users in this group</span>
+                                ) : (
+                                    <div className="av-chips">
+                                        {members.map((u) => (
+                                            <span key={u.id} className="av-chip" title={fullName(u) || u.username}>
+                                                {u.username}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+
+                        {view.ungrouped.length > 0 && (
+                            <div className="av-block">
+                                <div className="av-block-head">
+                                    <strong>No group</strong>
+                                    <span className="av-count">{view.ungrouped.length} user{view.ungrouped.length === 1 ? "" : "s"}</span>
+                                </div>
+                                <div className="av-chips">
+                                    {view.ungrouped.map((u) => (
+                                        <span key={u.id} className="av-chip" title={fullName(u) || u.username}>
+                                            {u.username}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="modal-foot">
+                            <button type="button" className="btn" onClick={() => setViewing(null)}>Close</button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

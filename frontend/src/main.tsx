@@ -13,6 +13,8 @@ import OrganizationDashboard from "./organization/OrganizationDashboard";
 import GroupsPage from "./organization/GroupsPage";
 import UsersPage from "./organization/UsersPage";
 import { RequireUser, RequireRole } from "./guards";
+import AdminGroupsPage from "./AdminGroupsPage";
+import AdminUsersPage from "./AdminUsersPage";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY in .env");
@@ -39,6 +41,8 @@ createRoot(document.getElementById("root")!).render(
                         <Route index element={<Navigate to="dashboard" replace />} />
                         <Route path="dashboard" element={<AdminDashboard />} />
                         <Route path="organizations" element={<OrganizationsPage />} />
+                        <Route path="groups" element={<AdminGroupsPage />} />
+                        <Route path="users" element={<AdminUsersPage />} />
                         <Route path="*" element={<ComingSoon />} />
                     </Route>
 

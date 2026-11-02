@@ -47,7 +47,7 @@ export default function PanelLayout({ menu, roleLabel, defaultOpen }: Props) {
         <div className="dash adm">
             <aside className={`adm-side ${sideOpen ? "" : "closed"}`}>
                 <div className="adm-brand">
-                    <div className="dash-logo" /> Casdoor
+                    <div className="dash-logo" /> ZTNA
                 </div>
 
                 {menu.map(({ label, icon: Icon, items }) => {

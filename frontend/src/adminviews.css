@@ -1,0 +1,50 @@
+/* Extra styles for the admin Organizations / Groups / Users pages and dashboard */
+
+.av-select{height:38px;border:1px solid #2a2a2a;border-radius:8px;background:#141414;color:#f2f2f2;padding:0 10px;font-size:14px;outline:0;font-family:inherit}
+.av-seg{display:flex;border:1px solid #2a2a2a;border-radius:8px;overflow:hidden}
+.av-seg button{height:36px;padding:0 12px;background:#141414;color:#a3a3a3;border:0;font-size:13px;cursor:pointer;font-family:inherit}
+.av-seg button:hover{color:#f2f2f2}
+.av-seg button.on{background:#232323;color:#f2f2f2}
+
+.av-count{font-size:12px;color:#8b8b8b;font-weight:500;white-space:nowrap}
+.av-muted{color:#8b8b8b}
+.av-num{font-variant-numeric:tabular-nums}
+
+/* collapsible organization section */
+.av-stack{display:flex;flex-direction:column;gap:14px}
+.av-sec{border:1px solid #2a2a2a;border-radius:12px;background:#141414;overflow:hidden}
+.av-sec-head{display:flex;align-items:center;gap:10px;width:100%;padding:14px 16px;background:none;border:0;color:#f2f2f2;font-size:15px;font-weight:600;cursor:pointer;text-align:left;font-family:inherit}
+.av-sec-head:hover{background:#181818}
+.av-sec-head .grow{flex:1}
+.av-sec-body{padding:2px 16px 16px;display:flex;flex-direction:column;gap:18px}
+.av-bucket-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#cfcfcf;margin:0 0 8px}
+.av-bucket-title .dot{width:8px;height:8px;border-radius:50%;background:#7c5cff}
+.av-bucket-title.none .dot{background:#5b5b5b}
+.av-inner{border:1px solid #232323;border-radius:10px;background:#101010;overflow-x:auto}
+.av-inner .tbl{min-width:520px}
+.av-inner .tbl th{padding:10px 14px;font-size:13px}
+.av-inner .tbl td{padding:11px 14px}
+
+/* member chips */
+.av-chips{display:flex;flex-wrap:wrap;gap:6px}
+.av-chip{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid #2a2a2a;background:#101010;color:#d6d6d6}
+
+/* expandable group rows */
+.av-click{cursor:pointer}
+.av-click:hover td{background:#181818}
+.av-expand td{background:#101010;padding:14px 16px}
+.av-chev{display:inline-flex;vertical-align:middle;margin-right:8px;color:#8b8b8b}
+
+/* organization details modal */
+.av-modal{max-width:640px !important;max-height:88vh;overflow-y:auto}
+.av-rows{display:flex;flex-direction:column}
+.av-row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid #1f1f1f;font-size:14px}
+.av-row span{color:#8b8b8b}
+.av-row b{font-weight:500;text-align:right;word-break:break-word}
+.av-block{border:1px solid #232323;border-radius:10px;padding:12px 14px;background:#101010;display:flex;flex-direction:column;gap:10px}
+.av-block-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px}
+.av-h3{margin:4px 0 0;font-size:14px;font-weight:600}
+
+.av-ok{color:#4ade80}
+.av-bad{color:#8b8b8b}
+.av-chart-empty{height:240px;display:grid;place-items:center;color:#8b8b8b;font-size:14px}

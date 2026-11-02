@@ -30,7 +30,7 @@ export default function OrganizationDashboard() {
         <div className="dash">
             <header className="dash-top">
                 <div className="dash-brand">
-                    <div className="dash-logo" /> Casdoor <span className="dash-badge">ORGANIZATION</span>
+                    <div className="dash-logo" /> ZTNA <span className="dash-badge">ORGANIZATION</span>
                 </div>
                 <div className="dash-right">
                     <span>{orgName}</span>
