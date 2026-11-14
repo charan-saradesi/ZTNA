@@ -173,11 +173,7 @@ export default function Login() {
 
           <div id="clerk-captcha" />
 
-          {role === "user" && (
-              <p className="lg-foot">
-                No account? <a href="/signup">sign up now</a>
-              </p>
-          )}
+
         </form>
 
         <div className="lg-powered">Powered by <b>MY TEAM</b></div>
