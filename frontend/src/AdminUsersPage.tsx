@@ -19,30 +19,30 @@ function UserTable({ list, showGroup, groupName, onDelete }: TableProps) {
         <div className="av-inner">
             <table className="tbl">
                 <thead>
-                    <tr>
-                        <th>Username</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        {showGroup && <th>Group</th>}
-                        <th>Added</th>
-                        <th style={{ textAlign: "right" }}>Action</th>
-                    </tr>
+                <tr>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    {showGroup && <th>Group</th>}
+                    <th>Added</th>
+                    <th style={{ textAlign: "right" }}>Action</th>
+                </tr>
                 </thead>
                 <tbody>
-                    {list.map((u) => (
-                        <tr key={u.id}>
-                            <td>{u.username}</td>
-                            <td>{fullName(u) || "—"}</td>
-                            <td>{u.email ?? "—"}</td>
-                            {showGroup && <td>{u.group_id ? groupName.get(u.group_id) ?? "—" : "No group"}</td>}
-                            <td className="num">{new Date(u.created_at).toLocaleString()}</td>
-                            <td>
-                                <div className="act">
-                                    <button className="btn sm danger" onClick={() => onDelete(u)}>Delete</button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
+                {list.map((u) => (
+                    <tr key={u.clerk_user_id}>
+                        <td>{u.username}</td>
+                        <td>{fullName(u) || "—"}</td>
+                        <td>{u.email ?? "—"}</td>
+                        {showGroup && <td>{u.group_id ? groupName.get(u.group_id) ?? "—" : "No group"}</td>}
+                        <td className="num">{new Date(u.created_at).toLocaleString()}</td>
+                        <td>
+                            <div className="act">
+                                <button className="btn sm danger" onClick={() => onDelete(u)}>Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                ))}
                 </tbody>
             </table>
         </div>
@@ -105,7 +105,7 @@ export default function AdminUsersPage() {
     const remove = async (u: Usr) => {
         setActionError("");
         if (!window.confirm(`Delete user "${u.username}"? This also deletes their login.`)) return;
-        const msg = await invokeFn("manage-user", { action: "delete", id: u.id });
+        const msg = await invokeFn("manage-user", { action: "delete", clerk_user_id: u.clerk_user_id });
         if (msg) setActionError(msg);
         else await reload();
     };
