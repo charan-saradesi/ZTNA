@@ -13,9 +13,14 @@ import OrganizationDashboard from "./organization/OrganizationDashboard";
 import GroupsPage from "./organization/GroupsPage";
 import UsersPage from "./organization/UsersPage";
 import { RequireUser, RequireRole } from "./guards";
+import "./theme.css";
+import { initTheme } from "./theme";
 import AdminGroupsPage from "./AdminGroupsPage";
 import AdminUsersPage from "./AdminUsersPage";
 
+
+
+initTheme();
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY in .env");
 

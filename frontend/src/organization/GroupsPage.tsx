@@ -275,7 +275,7 @@ export default function GroupsPage() {
                 <div className="av-sum-card"><span>Users in groups</span><b>{summary.inGroups}</b></div>
                 <div className="av-sum-card">
                     <span>Empty groups</span>
-                    <b style={{ color: summary.empty ? "#fbbf24" : undefined }}>{summary.empty}</b>
+                    <b style={{ color: summary.empty ? "var(--warn)" : undefined }}>{summary.empty}</b>
                 </div>
                 <div className="av-sum-card"><span>Average group size</span><b>{summary.avg}</b></div>
             </div>
@@ -399,7 +399,7 @@ export default function GroupsPage() {
                 </>
             )}
 
-            <div className="tbl-foot" style={{ border: "1px solid #2a2a2a", borderRadius: 12, background: "#141414" }}>
+            <div className="tbl-foot" style={{ border: "1px solid var(--bd)", borderRadius: 12, background: "var(--card)" }}>
                 <span>{filtered.length} total</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <button className="btn sm" disabled={current <= 1} onClick={() => setPage(current - 1)}>Prev</button>
@@ -470,7 +470,7 @@ export default function GroupsPage() {
                                         aria-label={`Color ${c}`}
                                         style={{
                                             width: 28, height: 28, borderRadius: "50%", background: c, cursor: "pointer",
-                                            border: form.color === c ? "2px solid #fff" : "2px solid transparent",
+                                            border: form.color === c ? "2px solid var(--tx)" : "2px solid transparent",
                                         }}
                                     />
                                 ))}
@@ -493,7 +493,7 @@ export default function GroupsPage() {
                                                     disabled={memberBusy}
                                                     onClick={() => moveMember(u, null)}
                                                     aria-label={`Remove ${u.username}`}
-                                                    style={{ background: "none", border: 0, color: "#ef4444", cursor: "pointer", padding: 0 }}
+                                                    style={{ background: "none", border: 0, color: "var(--err)", cursor: "pointer", padding: 0 }}
                                                 >
                                                     ×
                                                 </button>

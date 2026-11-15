@@ -6,7 +6,7 @@ import "./dash.css";
 import "./admin.css";
 import "./adminviews.css";
 
-const TOOLTIP = { background: "#141414", border: "1px solid #2a2a2a", borderRadius: 8 };
+const TOOLTIP = { background: "var(--card)", border: "1px solid var(--bd)", borderRadius: 8 };
 
 export default function AdminDashboard() {
     const { orgs, groups, users, loading, error } = useAdminData();
@@ -92,10 +92,10 @@ export default function AdminDashboard() {
                         <div style={{ width: "100%", height: 240 }}>
                             <ResponsiveContainer>
                                 <BarChart data={perDay}>
-                                    <CartesianGrid stroke="#2a2a2a" vertical={false} />
-                                    <XAxis dataKey="day" stroke="#8b8b8b" tickLine={false} axisLine={false} />
-                                    <YAxis stroke="#8b8b8b" tickLine={false} axisLine={false} allowDecimals={false} />
-                                    <Tooltip contentStyle={TOOLTIP} cursor={{ fill: "#1a1a1a" }} />
+                                    <CartesianGrid stroke="var(--bd)" vertical={false} />
+                                    <XAxis dataKey="day" stroke="var(--mut)" tickLine={false} axisLine={false} />
+                                    <YAxis stroke="var(--mut)" tickLine={false} axisLine={false} allowDecimals={false} />
+                                    <Tooltip contentStyle={TOOLTIP} cursor={{ fill: "var(--hover)" }} />
                                     <Bar dataKey="users" name="Users" fill="#7c5cff" radius={[6, 6, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
@@ -111,10 +111,10 @@ export default function AdminDashboard() {
                         <div style={{ width: "100%", height: 240 }}>
                             <ResponsiveContainer>
                                 <BarChart data={perOrg}>
-                                    <CartesianGrid stroke="#2a2a2a" vertical={false} />
-                                    <XAxis dataKey="name" stroke="#8b8b8b" tickLine={false} axisLine={false} />
-                                    <YAxis stroke="#8b8b8b" tickLine={false} axisLine={false} allowDecimals={false} />
-                                    <Tooltip contentStyle={TOOLTIP} cursor={{ fill: "#1a1a1a" }} />
+                                    <CartesianGrid stroke="var(--bd)" vertical={false} />
+                                    <XAxis dataKey="name" stroke="var(--mut)" tickLine={false} axisLine={false} />
+                                    <YAxis stroke="var(--mut)" tickLine={false} axisLine={false} allowDecimals={false} />
+                                    <Tooltip contentStyle={TOOLTIP} cursor={{ fill: "var(--hover)" }} />
                                     <Bar dataKey="users" name="Users" fill="#7c5cff" radius={[6, 6, 0, 0]} />
                                     <Bar dataKey="groups" name="Groups" fill="#3b82f6" radius={[6, 6, 0, 0]} />
                                 </BarChart>

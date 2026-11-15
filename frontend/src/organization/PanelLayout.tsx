@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react";
 import { supabase } from "../supabase";
 import "../dash.css";
 import "../admin.css";
+import {ThemeToggle} from "../theme.tsx";
 
 export type Item = { label: string; to: string };
 export type Group = { label: string; icon: LucideIcon; items: Item[] };
@@ -85,6 +86,7 @@ export default function PanelLayout({ menu, roleLabel, defaultOpen }: Props) {
                     </div>
 
                     <div className="adm-user">
+                        <ThemeToggle />
                         <button className="adm-user-btn" onClick={() => setMenuOpen(!menuOpen)}>
                             <div className="adm-avatar">{(who[0] ?? roleLabel[0]).toUpperCase()}</div>
                             {roleLabel} <ChevronDown size={15} />

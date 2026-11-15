@@ -17,7 +17,7 @@ type Usr = {
     created_at: string;
 };
 
-const TOOLTIP = { background: "#141414", border: "1px solid #2a2a2a", borderRadius: 8 };
+const TOOLTIP = { background: "var(--card)", border: "1px solid var(--bd)", borderRadius: 8 };
 const withinDays = (iso: string, days: number) => Date.now() - new Date(iso).getTime() < days * 86_400_000;
 const groupLabel = (g: Grp) => g.display_name || g.name;
 
@@ -98,8 +98,8 @@ export default function OrganizationDashboard() {
                 <div className="dash-card">
                     <h2>Get started</h2>
                     <p className="dash-sub" style={{ margin: "6px 0 0" }}>
-                        1. Create your <Link to="/organization/groups" style={{ color: "#b9a5ff" }}>groups</Link> (for example teams or
-                        departments). 2. Add <Link to="/organization/users" style={{ color: "#b9a5ff" }}>users</Link> and put each one in a
+                        1. Create your <Link to="/organization/groups" style={{ color: "var(--link)" }}>groups</Link> (for example teams or
+                        departments). 2. Add <Link to="/organization/users" style={{ color: "var(--link)" }}>users</Link> and put each one in a
                         group. They then sign in on the User tab.
                     </p>
                 </div>
@@ -132,10 +132,10 @@ export default function OrganizationDashboard() {
                         <div style={{ width: "100%", height: 240 }}>
                             <ResponsiveContainer>
                                 <BarChart data={perGroup}>
-                                    <CartesianGrid stroke="#2a2a2a" vertical={false} />
-                                    <XAxis dataKey="name" stroke="#8b8b8b" tickLine={false} axisLine={false} />
-                                    <YAxis stroke="#8b8b8b" tickLine={false} axisLine={false} allowDecimals={false} />
-                                    <Tooltip contentStyle={TOOLTIP} cursor={{ fill: "#1a1a1a" }} />
+                                    <CartesianGrid stroke="var(--bd)" vertical={false} />
+                                    <XAxis dataKey="name" stroke="var(--mut)" tickLine={false} axisLine={false} />
+                                    <YAxis stroke="var(--mut)" tickLine={false} axisLine={false} allowDecimals={false} />
+                                    <Tooltip contentStyle={TOOLTIP} cursor={{ fill: "var(--hover)" }} />
                                     <Bar dataKey="users" name="Users" fill="#7c5cff" radius={[6, 6, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
@@ -151,10 +151,10 @@ export default function OrganizationDashboard() {
                         <div style={{ width: "100%", height: 240 }}>
                             <ResponsiveContainer>
                                 <BarChart data={perDay}>
-                                    <CartesianGrid stroke="#2a2a2a" vertical={false} />
-                                    <XAxis dataKey="day" stroke="#8b8b8b" tickLine={false} axisLine={false} />
-                                    <YAxis stroke="#8b8b8b" tickLine={false} axisLine={false} allowDecimals={false} />
-                                    <Tooltip contentStyle={TOOLTIP} cursor={{ fill: "#1a1a1a" }} />
+                                    <CartesianGrid stroke="var(--bd)" vertical={false} />
+                                    <XAxis dataKey="day" stroke="var(--mut)" tickLine={false} axisLine={false} />
+                                    <YAxis stroke="var(--mut)" tickLine={false} axisLine={false} allowDecimals={false} />
+                                    <Tooltip contentStyle={TOOLTIP} cursor={{ fill: "var(--hover)" }} />
                                     <Bar dataKey="users" name="Users" fill="#3b82f6" radius={[6, 6, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>

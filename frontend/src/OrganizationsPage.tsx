@@ -311,8 +311,8 @@ export default function OrganizationsPage() {
             {/* Summary */}
             <div className="av-sum">
                 <div className="av-sum-card"><span>Organizations</span><b>{summary.total}</b></div>
-                <div className="av-sum-card"><span>Active</span><b style={{ color: "#4ade80" }}>{summary.active}</b></div>
-                <div className="av-sum-card"><span>Disabled</span><b style={{ color: summary.disabled ? "#f87171" : undefined }}>{summary.disabled}</b></div>
+                <div className="av-sum-card"><span>Active</span><b style={{ color: "var(--ok)" }}>{summary.active}</b></div>
+                <div className="av-sum-card"><span>Disabled</span><b style={{ color: summary.disabled ? "var(--err)" : undefined }}>{summary.disabled}</b></div>
                 <div className="av-sum-card"><span>Without a login</span><b>{summary.noLogin}</b></div>
             </div>
 
@@ -452,9 +452,9 @@ export default function OrganizationsPage() {
                                     {place(o) && <div><MapPin size={14} /><span>{place(o)}</span></div>}
                                     {o.website_url && <div><Globe size={14} /><span>{o.website_url}</span></div>}
                                     {!o.industry && !o.contact_name && !o.contact_email && !o.phone && !place(o) && !o.website_url && (
-                                        <div style={{ color: "#8b8b8b" }}><span>No details added yet</span></div>
+                                        <div style={{ color: "var(--mut)" }}><span>No details added yet</span></div>
                                     )}
-                                    {!o.auth_user_id && <div style={{ color: "#fbbf24" }}><KeyRound size={14} /><span>No login yet</span></div>}
+                                    {!o.auth_user_id && <div style={{ color: "var(--warn)" }}><KeyRound size={14} /><span>No login yet</span></div>}
                                 </div>
 
                                 <div className="av-card-stats">
@@ -475,7 +475,7 @@ export default function OrganizationsPage() {
                 </>
             )}
 
-            <div className="tbl-foot" style={{ border: "1px solid #2a2a2a", borderRadius: 12, background: "#141414" }}>
+            <div className="tbl-foot" style={{ border: "1px solid var(--bd)", borderRadius: 12, background: "var(--card)" }}>
                 <span>{list.length} total</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <button className="btn sm" disabled={current <= 1} onClick={() => setPage(current - 1)}>Prev</button>
@@ -698,7 +698,7 @@ export default function OrganizationsPage() {
                                 <span>Website</span>
                                 <b>
                                     {safeUrl(viewing.website_url) ? (
-                                        <a href={safeUrl(viewing.website_url)!} target="_blank" rel="noreferrer" style={{ color: "#b9a5ff" }}>
+                                        <a href={safeUrl(viewing.website_url)!} target="_blank" rel="noreferrer" style={{ color: "var(--link)" }}>
                                             {viewing.website_url}
                                         </a>
                                     ) : (viewing.website_url ?? "—")}

@@ -403,7 +403,7 @@ export default function UsersPage() {
                 <div className="av-sum-card"><span>In a group</span><b>{summary.assigned}</b></div>
                 <div className="av-sum-card">
                     <span>Without a group</span>
-                    <b style={{ color: summary.unassigned ? "#fbbf24" : undefined }}>{summary.unassigned}</b>
+                    <b style={{ color: summary.unassigned ? "var(--warn)" : undefined }}>{summary.unassigned}</b>
                 </div>
                 <div className="av-sum-card"><span>New this week</span><b>{summary.fresh}</b></div>
             </div>
@@ -491,7 +491,7 @@ export default function UsersPage() {
                                 <span className="grow" />
                                 <span className="av-count">{b.users.length} user{b.users.length === 1 ? "" : "s"}</span>
                             </div>
-                            <div className="av-inner" style={{ border: 0, borderTop: "1px solid #232323", borderRadius: 0 }}>
+                            <div className="av-inner" style={{ border: 0, borderTop: "1px solid var(--bd2)", borderRadius: 0 }}>
                                 <table className="tbl" style={{ minWidth: 820 }}>
                                     {head}
                                     <tbody>{b.users.map(userRow)}</tbody>

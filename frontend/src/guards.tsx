@@ -5,7 +5,7 @@ import { useAuth } from "@clerk/react";
 import { supabase } from "./supabase";
 
 const Loading = () => (
-    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#0f0f0f", color: "#8b8b8b", fontFamily: "system-ui" }}>
+    <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "var(--bg)", color: "var(--mut)", fontFamily: "system-ui" }}>
         Loading…
     </div>
 );

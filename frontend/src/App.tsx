@@ -100,10 +100,10 @@ export default function Login() {
 }
 
 const css = `
-.lg{--bg:#0f0f0f;--card:#141414;--bd:#2a2a2a;--tx:#f2f2f2;--mut:#8b8b8b;--seg:#1c1c1c;--btn:#fff;--btx:#111;--ac:#7c5cff;
+.lg{--ac:#7c5cff;
  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
  background:var(--bg);color:var(--tx);font-family:Inter,system-ui,sans-serif;position:relative;padding:16px}
-.lg.light{--bg:#f6f6f8;--card:#fff;--bd:#e3e3e8;--tx:#16161a;--mut:#6b6b76;--seg:#f0f0f4;--btn:#16161a;--btx:#fff}
+.lg.light{}
 .lg *{box-sizing:border-box}
 .lg-theme{position:absolute;top:20px;right:24px;background:none;border:0;color:var(--mut);cursor:pointer}
 .lg-theme:hover{color:var(--tx)}

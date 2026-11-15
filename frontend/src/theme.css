@@ -1,0 +1,62 @@
+/* ONE place for all colors. Dark is the default; <html data-theme="light"> switches everything.
+   Import this once in main.tsx, AFTER your other css imports. */
+:root{
+  color-scheme:dark;
+  --bg:#0f0f0f;      /* page */
+  --card:#141414;    /* cards, panels, modals */
+  --bg2:#101010;     /* inset areas */
+  --hover:#1a1a1a;   /* hover backgrounds */
+  --seg:#1c1c1c;     /* segmented controls */
+  --bd:#2a2a2a;      /* borders */
+  --bd2:#1f1f1f;     /* soft borders, row dividers */
+  --tx:#f2f2f2;      /* main text */
+  --tx2:#cfcfcf;     /* secondary text */
+  --mut:#8b8b8b;     /* muted text */
+  --mut2:#a3a3a3;    /* muted text, a bit stronger */
+  --btn:#fff;        /* primary button */
+  --btx:#111;        /* primary button text */
+  --ac:#7c5cff;      /* accent */
+  --ac2:#9b7bff;
+  --link:#b9a5ff;
+  --ok:#4ade80;
+  --warn:#fbbf24;
+  --err:#ef4444;
+  --chip:#2a2150;
+  --hero1:#1c1830;
+  --hero2:#15131f;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f6f6f8;
+  --card:#ffffff;
+  --bg2:#f1f1f5;
+  --hover:#eeeef3;
+  --seg:#f0f0f4;
+  --bd:#e3e3e8;
+  --bd2:#ebebf0;
+  --tx:#16161a;
+  --tx2:#3a3a44;
+  --mut:#6b6b76;
+  --mut2:#52525c;
+  --btn:#16161a;
+  --btx:#ffffff;
+  --link:#5a3bd6;
+  --ok:#15803d;
+  --warn:#b45309;
+  --err:#dc2626;
+  --chip:#ece7ff;
+  --hero1:#ece7ff;
+  --hero2:#f6f3ff;
+}
+
+html,body{background:var(--bg);color:var(--tx)}
+
+/* text on purple gradients stays white in both themes */
+.av-avatar,.adm-avatar,.ud-avatar{color:#fff}
+
+/* the shared toggle button (see theme.tsx) */
+.theme-toggle{display:flex;align-items:center;justify-content:center;background:none;border:0;color:var(--mut2);cursor:pointer;padding:6px;border-radius:8px}
+.theme-toggle:hover{color:var(--tx);background:var(--hover)}
+
+/* the toggle sits next to the user menu in the top bars */
+.adm-user,.ud-user{display:flex;align-items:center;gap:6px}

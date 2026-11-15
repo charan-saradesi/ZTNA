@@ -7,6 +7,7 @@ import {
 import { supabase } from "./supabase";
 import "./dash.css";
 import "./admin.css";
+import {ThemeToggle} from "./theme.tsx";
 
 type Item = { label: string; to: string };
 type Group = { label: string; icon: typeof House; items: Item[] };
@@ -102,6 +103,7 @@ export default function AdminLayout() {
                     </div>
 
                     <div className="adm-user">
+                        <ThemeToggle />
                         <button className="adm-user-btn" onClick={() => setMenuOpen(!menuOpen)}>
                             <div className="adm-avatar">{(email[0] ?? "A").toUpperCase()}</div>
                             Admin <ChevronDown size={15} />

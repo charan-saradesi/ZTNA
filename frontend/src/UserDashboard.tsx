@@ -6,6 +6,7 @@ import {
     LifeBuoy, Laptop, Receipt, BookOpen, KeyRound, Loader2,
 } from "lucide-react";
 import "./userdash.css";
+import {ThemeToggle} from "./theme.tsx";
 
 // ---- Sample content: replace with real data later ----
 const TILES = [
@@ -97,7 +98,9 @@ export default function UserDashboard() {
                     {meta.org_name && <span className="ud-org">{meta.org_name}</span>}
                 </div>
 
+
                 <div className="ud-user">
+                    <ThemeToggle />
                     <button className="ud-user-btn" onClick={() => setMenuOpen(!menuOpen)}>
                         <div className="ud-avatar">{initial}</div>
                         {display} <ChevronDown size={15} />
@@ -108,6 +111,7 @@ export default function UserDashboard() {
                             <button onClick={() => { setMenuOpen(false); setPwOpen(true); }}>
                                 <KeyRound size={15} /> Change password
                             </button>
+
                             <button onClick={() => signOut({ redirectUrl: "/login" })}>
                                 <LogOut size={15} /> Sign out
                             </button>
