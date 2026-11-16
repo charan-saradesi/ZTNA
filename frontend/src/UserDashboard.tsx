@@ -107,7 +107,7 @@ export default function UserDashboard() {
                             <button onClick={() => { setMenuOpen(false); setPwOpen(true); }}>
                                 <KeyRound size={15} /> Change password
                             </button>
-                            <button onClick={() => signOut({ redirectUrl: "/login" })}>
+                            <button onClick={() => signOut({ redirectUrl: "/" })}>
                                 <LogOut size={15} /> Sign out
                             </button>
                         </div>
