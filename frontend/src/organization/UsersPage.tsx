@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Plus, RefreshCw, Search, X, Loader2, Download, Wand2, KeyRound, LayoutList, Layers } from "lucide-react";
+import { Plus, RefreshCw, Search, X, Loader2, Download, Wand2, KeyRound, LayoutList, Layers, Power, RotateCcw, Users as UsersIcon } from "lucide-react";
 import { supabase } from "../supabase";
+import { EmptyState, TableSkeleton, HealthBar, healthOf, isDisabled } from "../ui";
 import "../admin.css";
 import "../adminviews.css";
 
@@ -15,6 +16,10 @@ type UserRow = {
     last_name: string | null;
     email: string | null;
     created_at: string;
+    // columns added with features.sql
+    status?: string | null;
+    failed_attempts?: number | null;
+    failed_since?: string | null;
 };
 
 type GroupOption = { id: string; name: string; display_name: string | null };
@@ -31,6 +36,7 @@ const EMPTY: FormState = { username: "", password: "", first_name: "", last_name
 const PAGE_SIZE = 10;
 
 type SortBy = "newest" | "name" | "group";
+type StatusFilter = "all" | "active" | "disabled" | "low";
 type ViewMode = "table" | "grouped";
 
 const fullName = (u: Pick<UserRow, "first_name" | "last_name">) => `${u.first_name ?? ""} ${u.last_name ?? ""}`.trim();
@@ -74,6 +80,7 @@ export default function UsersPage() {
     const [q, setQ] = useState("");
     const [groupFilter, setGroupFilter] = useState(params.get("group") ?? "all"); // "all" | "none" | group id
     const [sortBy, setSortBy] = useState<SortBy>("newest");
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
     const [mode, setMode] = useState<ViewMode>("table");
     const [page, setPage] = useState(1);
 
@@ -127,6 +134,8 @@ export default function UsersPage() {
             assigned: users.filter((u) => u.group_id).length,
             unassigned: users.filter((u) => !u.group_id).length,
             fresh: users.filter((u) => withinDays(u.created_at, 7)).length,
+            disabled: users.filter((u) => isDisabled(u)).length,
+            low: users.filter((u) => healthOf(u).score < 80).length,
         }),
         [users]
     );
@@ -135,6 +144,10 @@ export default function UsersPage() {
         const t = q.trim().toLowerCase();
         const out = users
             .filter((u) => groupFilter === "all" || (groupFilter === "none" ? !u.group_id : u.group_id === groupFilter))
+            .filter((u) =>
+                statusFilter === "all" ||
+                (statusFilter === "disabled" ? isDisabled(u) : statusFilter === "active" ? !isDisabled(u) : healthOf(u).score < 80)
+            )
             .filter(
                 (u) =>
                     !t ||
@@ -149,7 +162,7 @@ export default function UsersPage() {
         });
         return out;
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [users, q, groupFilter, sortBy, groupMap]);
+    }, [users, q, groupFilter, statusFilter, sortBy, groupMap]);
 
     const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const current = Math.min(page, pages);
@@ -279,22 +292,22 @@ export default function UsersPage() {
 
         const msg = editing
             ? await callFn({
-                action: "update",
-                clerk_user_id: editing.clerk_user_id,
-                first_name: form.first_name.trim(),
-                last_name: form.last_name.trim(),
-                group_id: form.group_id || null,
-                password: form.password,
-            })
+                  action: "update",
+                  clerk_user_id: editing.clerk_user_id,
+                  first_name: form.first_name.trim(),
+                  last_name: form.last_name.trim(),
+                  group_id: form.group_id || null,
+                  password: form.password,
+              })
             : await callFn({
-                action: "create",
-                username: form.username,
-                password: form.password,
-                first_name: form.first_name.trim(),
-                last_name: form.last_name.trim(),
-                email: form.email.trim(),
-                group_id: form.group_id || null,
-            });
+                  action: "create",
+                  username: form.username,
+                  password: form.password,
+                  first_name: form.first_name.trim(),
+                  last_name: form.last_name.trim(),
+                  email: form.email.trim(),
+                  group_id: form.group_id || null,
+              });
 
         setSaving(false);
         if (msg) return setFormError(msg);
@@ -310,6 +323,29 @@ export default function UsersPage() {
         if (msg) setError(msg);
         else {
             flash(`"${u.username}" deleted.`);
+            await load();
+        }
+    };
+
+    // ---------- Disable / enable one user, reset health ----------
+    const toggleStatus = async (u: UserRow) => {
+        const next = isDisabled(u) ? "active" : "disabled";
+        if (next === "disabled" && !window.confirm(`Disable "${u.username}"?\n\nThey will be signed out and can't sign in until you enable them again. Nothing is deleted.`)) return;
+        setError("");
+        const msg = await callFn({ action: "set_status", clerk_user_id: u.clerk_user_id, status: next });
+        if (msg) setError(msg);
+        else {
+            flash(next === "disabled" ? `"${u.username}" is disabled.` : `"${u.username}" can sign in again.`);
+            await load();
+        }
+    };
+
+    const resetHealth = async (u: UserRow) => {
+        setError("");
+        const msg = await callFn({ action: "reset_health", clerk_user_id: u.clerk_user_id });
+        if (msg) setError(msg);
+        else {
+            flash(`Health reset for "${u.username}".`);
             await load();
         }
     };
@@ -350,6 +386,8 @@ export default function UsersPage() {
                 <span className="av-org-name">{u.username}</span>
                 {fullName(u) && <span className="av-sub-text">{fullName(u)}</span>}
             </td>
+            <td><span className={`av-badge ${isDisabled(u) ? "disabled" : "active"}`}>{isDisabled(u) ? "Disabled" : "Active"}</span></td>
+            <td><HealthBar user={u} /></td>
             <td>{u.email ?? "—"}</td>
             <td>{u.group_id ? <span className="av-chip">{groupLabel(u.group_id)}</span> : <span className="av-muted">No group</span>}</td>
             <td className="num">{new Date(u.created_at).toLocaleDateString()}</td>
@@ -357,24 +395,40 @@ export default function UsersPage() {
                 <div className="act">
                     <button className="btn sm" onClick={() => openEdit(u)}>Edit</button>
                     <button className="btn sm" onClick={() => openReset(u)} title="Reset password"><KeyRound size={14} /></button>
+                    <button className="btn sm" onClick={() => toggleStatus(u)} title={isDisabled(u) ? "Enable user" : "Disable user"}><Power size={14} /></button>
+                    {healthOf(u).attempts > 0 && (
+                        <button className="btn sm" onClick={() => resetHealth(u)} title="Reset health"><RotateCcw size={14} /></button>
+                    )}
                     <button className="btn sm danger" onClick={() => remove(u)}>Delete</button>
                 </div>
             </td>
         </tr>
     );
 
+    const filtering = !!q || groupFilter !== "all" || statusFilter !== "all";
+    const emptyView = (
+        <EmptyState
+            icon={UsersIcon}
+            title={filtering ? "No matching users" : "No users yet"}
+            text={filtering ? "Try a different search or clear the filters." : "Add your first user. They sign in on the User tab with the username and password you set."}
+            action={!filtering && <button className="btn primary" onClick={openAdd}><Plus size={16} /> Add user</button>}
+        />
+    );
+
     const head = (
         <thead>
-        <tr>
-            <th style={{ width: 36 }}>
-                <input type="checkbox" checked={allShownSelected} onChange={toggleAllShown} aria-label="Select all" />
-            </th>
-            <th>User</th>
-            <th>Email</th>
-            <th>Group</th>
-            <th>Created</th>
-            <th style={{ textAlign: "right" }}>Action</th>
-        </tr>
+            <tr>
+                <th style={{ width: 36 }}>
+                    <input type="checkbox" checked={allShownSelected} onChange={toggleAllShown} aria-label="Select all" />
+                </th>
+                <th>User</th>
+                <th>Status</th>
+                <th>Health</th>
+                <th>Email</th>
+                <th>Group</th>
+                <th>Created</th>
+                <th style={{ textAlign: "right" }}>Action</th>
+            </tr>
         </thead>
     );
 
@@ -406,6 +460,14 @@ export default function UsersPage() {
                     <b style={{ color: summary.unassigned ? "var(--warn)" : undefined }}>{summary.unassigned}</b>
                 </div>
                 <div className="av-sum-card"><span>New this week</span><b>{summary.fresh}</b></div>
+                <div className="av-sum-card">
+                    <span>Disabled</span>
+                    <b style={{ color: summary.disabled ? "var(--err)" : undefined }}>{summary.disabled}</b>
+                </div>
+                <div className="av-sum-card">
+                    <span>Low health</span>
+                    <b style={{ color: summary.low ? "var(--warn)" : undefined }}>{summary.low}</b>
+                </div>
             </div>
 
             <div className="pg-actions" style={{ flexWrap: "wrap" }}>
@@ -422,6 +484,12 @@ export default function UsersPage() {
                     <option value="all">All groups</option>
                     <option value="none">No group</option>
                     {groups.map((g) => <option key={g.id} value={g.id}>{g.display_name || g.name}</option>)}
+                </select>
+                <select className="av-select" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value as StatusFilter); setPage(1); }} aria-label="Filter by status">
+                    <option value="all">All users</option>
+                    <option value="active">Active</option>
+                    <option value="disabled">Disabled</option>
+                    <option value="low">Low health</option>
                 </select>
                 <select className="av-select" value={sortBy} onChange={(e) => setSortBy(e.target.value as SortBy)} aria-label="Sort">
                     <option value="newest">Newest first</option>
@@ -455,15 +523,13 @@ export default function UsersPage() {
 
             {mode === "table" && (
                 <div className="tbl-wrap">
-                    <table className="tbl" style={{ minWidth: 820 }}>
+                    <table className="tbl" style={{ minWidth: 1020 }}>
                         {head}
                         <tbody>{rows.map(userRow)}</tbody>
                     </table>
 
-                    {!loading && rows.length === 0 && (
-                        <div className="empty">{q || groupFilter !== "all" ? "No matching users" : "No users yet. Click Add to create one."}</div>
-                    )}
-                    {loading && <div className="empty">Loading…</div>}
+                    {!loading && rows.length === 0 && emptyView}
+                    {loading && <TableSkeleton />}
 
                     <div className="tbl-foot">
                         <span>{filtered.length} total</span>
@@ -478,10 +544,8 @@ export default function UsersPage() {
 
             {mode === "grouped" && (
                 <div className="av-stack">
-                    {loading && <div className="tbl-wrap"><div className="empty">Loading…</div></div>}
-                    {!loading && buckets.length === 0 && (
-                        <div className="tbl-wrap"><div className="empty">{q || groupFilter !== "all" ? "No matching users" : "No users yet. Click Add to create one."}</div></div>
-                    )}
+                    {loading && <div className="tbl-wrap"><TableSkeleton /></div>}
+                    {!loading && buckets.length === 0 && <div className="tbl-wrap">{emptyView}</div>}
                     {buckets.map((b) => (
                         <div key={b.key} className="av-sec">
                             <div className="av-sec-head" style={{ cursor: "default" }}>
@@ -492,7 +556,7 @@ export default function UsersPage() {
                                 <span className="av-count">{b.users.length} user{b.users.length === 1 ? "" : "s"}</span>
                             </div>
                             <div className="av-inner" style={{ border: 0, borderTop: "1px solid var(--bd2)", borderRadius: 0 }}>
-                                <table className="tbl" style={{ minWidth: 820 }}>
+                                <table className="tbl" style={{ minWidth: 1020 }}>
                                     {head}
                                     <tbody>{b.users.map(userRow)}</tbody>
                                 </table>

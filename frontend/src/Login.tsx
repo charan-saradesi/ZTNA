@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useSignIn, useAuth } from "@clerk/react";
 import { User, ShieldCheck, Building2, ArrowRight, Moon, Sun, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase, nameToEmail } from "./supabase";
+import { reportFailedLogin, isWrongPassword } from "./health";
 
 type Role = "user" | "admin" | "organization";
 
@@ -47,7 +48,10 @@ export default function Login() {
     }
 
     const { error: pwErr } = await signIn.password({ identifier: name, password });
-    if (pwErr) return setError(pwErr.message ?? "Invalid username or password");
+    if (pwErr) {
+      if (isWrongPassword(pwErr)) reportFailedLogin(name); // lowers this user's health
+      return setError(pwErr.message ?? "Invalid username or password");
+    }
 
     if (signIn.status === "complete") {
       await signIn.finalize({

@@ -1,8 +1,9 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { Plus, RefreshCw, Search, X, Loader2, ChevronDown, ChevronRight, LayoutList, LayoutGrid, UserPlus } from "lucide-react";
+import { Plus, RefreshCw, Search, X, Loader2, ChevronDown, ChevronRight, LayoutList, LayoutGrid, UserPlus, Layers } from "lucide-react";
 import { supabase } from "../supabase";
+import { EmptyState, TableSkeleton } from "../ui";
 import "../admin.css";
 import "../adminviews.css";
 
@@ -251,7 +252,15 @@ export default function GroupsPage() {
             </div>
         );
 
-    const emptyText = q || show !== "all" ? "No matching groups" : "No groups yet. Click Add to create one.";
+    const filtering = !!q || show !== "all";
+    const emptyView = (
+        <EmptyState
+            icon={Layers}
+            title={filtering ? "No matching groups" : "No groups yet"}
+            text={filtering ? "Try a different search or clear the filter." : "Groups are teams or departments. Create one, then put users in it."}
+            action={!filtering && <button className="btn primary" onClick={openAdd}><Plus size={16} /> Add group</button>}
+        />
+    );
 
     return (
         <div className="adm-page">
@@ -314,63 +323,63 @@ export default function GroupsPage() {
                 <div className="tbl-wrap">
                     <table className="tbl" style={{ minWidth: 700 }}>
                         <thead>
-                        <tr>
-                            <th>Group</th>
-                            <th>Users</th>
-                            <th>Created</th>
-                            <th style={{ textAlign: "right" }}>Action</th>
-                        </tr>
+                            <tr>
+                                <th>Group</th>
+                                <th>Users</th>
+                                <th>Created</th>
+                                <th style={{ textAlign: "right" }}>Action</th>
+                            </tr>
                         </thead>
                         <tbody>
-                        {rows.map((g) => {
-                            const list = byGroup.get(g.id) ?? [];
-                            const expanded = openRow === g.id;
-                            return (
-                                <Fragment key={g.id}>
-                                    <tr className="av-click" onClick={() => setOpenRow(expanded ? null : g.id)}>
-                                        <td>
-                                            <span className="av-chev">{expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}</span>
-                                            {g.color && <span style={{ display: "inline-block", width: 9, height: 9, borderRadius: "50%", background: g.color, marginRight: 8 }} />}
-                                            <span className="av-org-name">{label(g)}</span>
-                                            <span className="av-sub-text" style={{ marginLeft: 24 }}>
+                            {rows.map((g) => {
+                                const list = byGroup.get(g.id) ?? [];
+                                const expanded = openRow === g.id;
+                                return (
+                                    <Fragment key={g.id}>
+                                        <tr className="av-click" onClick={() => setOpenRow(expanded ? null : g.id)}>
+                                            <td>
+                                                <span className="av-chev">{expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}</span>
+                                                {g.color && <span style={{ display: "inline-block", width: 9, height: 9, borderRadius: "50%", background: g.color, marginRight: 8 }} />}
+                                                <span className="av-org-name">{label(g)}</span>
+                                                <span className="av-sub-text" style={{ marginLeft: 24 }}>
                                                     {[g.display_name ? g.name : "", g.description].filter(Boolean).join(" · ")}
                                                 </span>
-                                        </td>
-                                        <td className="av-num">
-                                            {list.length}
-                                            {list.length === 0 && <span className="av-badge nologin" style={{ marginLeft: 8, marginTop: 0 }}>Empty</span>}
-                                        </td>
-                                        <td className="num">{new Date(g.created_at).toLocaleDateString()}</td>
-                                        <td>
-                                            <div className="act" onClick={(e) => e.stopPropagation()}>
-                                                <Link to={`/organization/users?group=${g.id}`} className="btn sm" style={{ textDecoration: "none" }} title="See or add users in this group">
-                                                    <UserPlus size={14} /> Users
-                                                </Link>
-                                                <button className="btn sm" onClick={() => openEdit(g)}>Edit</button>
-                                                <button className="btn sm danger" onClick={() => remove(g)}>Delete</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {expanded && (
-                                        <tr className="av-expand">
-                                            <td colSpan={4}>{chips(list)}</td>
+                                            </td>
+                                            <td className="av-num">
+                                                {list.length}
+                                                {list.length === 0 && <span className="av-badge nologin" style={{ marginLeft: 8, marginTop: 0 }}>Empty</span>}
+                                            </td>
+                                            <td className="num">{new Date(g.created_at).toLocaleDateString()}</td>
+                                            <td>
+                                                <div className="act" onClick={(e) => e.stopPropagation()}>
+                                                    <Link to={`/organization/users?group=${g.id}`} className="btn sm" style={{ textDecoration: "none" }} title="See or add users in this group">
+                                                        <UserPlus size={14} /> Users
+                                                    </Link>
+                                                    <button className="btn sm" onClick={() => openEdit(g)}>Edit</button>
+                                                    <button className="btn sm danger" onClick={() => remove(g)}>Delete</button>
+                                                </div>
+                                            </td>
                                         </tr>
-                                    )}
-                                </Fragment>
-                            );
-                        })}
+                                        {expanded && (
+                                            <tr className="av-expand">
+                                                <td colSpan={4}>{chips(list)}</td>
+                                            </tr>
+                                        )}
+                                    </Fragment>
+                                );
+                            })}
                         </tbody>
                     </table>
 
-                    {!loading && rows.length === 0 && <div className="empty">{emptyText}</div>}
-                    {loading && <div className="empty">Loading…</div>}
+                    {!loading && rows.length === 0 && emptyView}
+                    {loading && <TableSkeleton />}
                 </div>
             )}
 
             {mode === "cards" && (
                 <>
-                    {loading && <div className="tbl-wrap"><div className="empty">Loading…</div></div>}
-                    {!loading && rows.length === 0 && <div className="tbl-wrap"><div className="empty">{emptyText}</div></div>}
+                    {loading && <div className="tbl-wrap"><TableSkeleton /></div>}
+                    {!loading && rows.length === 0 && <div className="tbl-wrap">{emptyView}</div>}
                     <div className="av-cards">
                         {rows.map((g) => {
                             const list = byGroup.get(g.id) ?? [];

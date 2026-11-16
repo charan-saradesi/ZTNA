@@ -5,9 +5,10 @@ import {
     ChevronDown, ChevronUp, PanelLeft, LogOut,
 } from "lucide-react";
 import { supabase } from "./supabase";
+import { useSidebar, SidebarBackdrop } from "./sidebar";
+import { ThemeToggle } from "./theme";
 import "./dash.css";
 import "./admin.css";
-import {ThemeToggle} from "./theme.tsx";
 
 type Item = { label: string; to: string };
 type Group = { label: string; icon: typeof House; items: Item[] };
@@ -43,7 +44,7 @@ export default function AdminLayout() {
     const navigate = useNavigate();
     const { pathname } = useLocation();
 
-    const [sideOpen, setSideOpen] = useState(true);
+    const { open: sideOpen, toggle: toggleSide, close: closeSide } = useSidebar();
     const [menuOpen, setMenuOpen] = useState(false);
     const [email, setEmail] = useState("");
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ Home: true, "User Management": true });
@@ -91,10 +92,12 @@ export default function AdminLayout() {
                 })}
             </aside>
 
+            <SidebarBackdrop open={sideOpen} onClose={closeSide} />
+
             <div className="adm-content">
                 <header className="adm-top">
                     <div className="adm-left">
-                        <button className="adm-icon-btn" onClick={() => setSideOpen(!sideOpen)} aria-label="Toggle sidebar">
+                        <button className="adm-icon-btn" onClick={toggleSide} aria-label="Toggle sidebar">
                             <PanelLeft size={18} />
                         </button>
                         <span>Home</span>

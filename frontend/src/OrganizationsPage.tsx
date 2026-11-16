@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import type { FormEvent, MouseEvent } from "react";
 import {
     Plus, RefreshCw, Search, X, Loader2, Ellipsis, LayoutList, LayoutGrid,
-    Mail, Phone, MapPin, Globe, Briefcase, KeyRound, Pencil, Power, Trash2, Type,
+    Mail, Phone, MapPin, Globe, Briefcase, Building2, KeyRound, Pencil, Power, Trash2, Type,
 } from "lucide-react";
+import { EmptyState, TableSkeleton } from "./ui";
 import { useAdminData, invokeFn, invokeFnDetailed, groupLabel, fullName } from "./adminData";
 import type { Org } from "./adminData";
 import "./admin.css";
@@ -417,19 +418,19 @@ export default function OrganizationsPage() {
                     </table>
 
                     {!loading && rows.length === 0 && (
-                        <div className="empty">{q || statusFilter !== "all" ? "No matching organizations" : "No organizations yet. Click Add to create one."}</div>
+                        <EmptyState icon={Building2} title={q || statusFilter !== "all" ? "No matching organizations" : "No organizations yet"} text={q || statusFilter !== "all" ? "Try a different search or clear the filters." : "Add an organization to give it a login, groups and users."} action={!(q || statusFilter !== "all") && <button className="btn primary" onClick={openAdd}><Plus size={16} /> Add organization</button>} />
                     )}
-                    {loading && <div className="empty">Loading…</div>}
+                    {loading && <TableSkeleton />}
                 </div>
             )}
 
             {/* Card layout */}
             {mode === "cards" && (
                 <>
-                    {loading && <div className="tbl-wrap"><div className="empty">Loading…</div></div>}
+                    {loading && <div className="tbl-wrap"><TableSkeleton /></div>}
                     {!loading && rows.length === 0 && (
                         <div className="tbl-wrap">
-                            <div className="empty">{q || statusFilter !== "all" ? "No matching organizations" : "No organizations yet. Click Add to create one."}</div>
+                            <EmptyState icon={Building2} title={q || statusFilter !== "all" ? "No matching organizations" : "No organizations yet"} text={q || statusFilter !== "all" ? "Try a different search or clear the filters." : "Add an organization to give it a login, groups and users."} action={!(q || statusFilter !== "all") && <button className="btn primary" onClick={openAdd}><Plus size={16} /> Add organization</button>} />
                         </div>
                     )}
                     <div className="av-cards">

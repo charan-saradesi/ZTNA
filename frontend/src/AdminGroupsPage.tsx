@@ -1,7 +1,8 @@
 import { Fragment, useMemo, useState } from "react";
-import { RefreshCw, Search, ChevronRight, ChevronDown } from "lucide-react";
+import { RefreshCw, Search, ChevronRight, ChevronDown, Layers } from "lucide-react";
 import { useAdminData, groupLabel, fullName } from "./adminData";
 import type { Usr } from "./adminData";
+import { EmptyState, TableSkeleton } from "./ui";
 import "./admin.css";
 import "./adminviews.css";
 
@@ -141,11 +142,13 @@ export default function AdminGroupsPage() {
                 </table>
 
                 {!loading && rows.length === 0 && (
-                    <div className="empty">
-                        {q || org ? "No matching groups" : "No groups yet. Organizations create groups from their own panel."}
-                    </div>
+                    <EmptyState
+                        icon={Layers}
+                        title={q || org ? "No matching groups" : "No groups yet"}
+                        text={q || org ? "Try a different search or clear the filter." : "Organizations create their groups from their own panel."}
+                    />
                 )}
-                {loading && <div className="empty">Loading…</div>}
+                {loading && <TableSkeleton />}
 
                 <div className="tbl-foot">
                     <span>{filtered.length} total</span>

@@ -1,4 +1,4 @@
-import { House, LayoutGrid, Settings } from "lucide-react";
+import { House, LayoutGrid, Settings, Megaphone } from "lucide-react";
 import PanelLayout from "./PanelLayout";
 import type { Group } from "./PanelLayout";
 
@@ -17,11 +17,15 @@ const MENU: Group[] = [
         ],
     },
     {
+        label: "Communication", icon: Megaphone,
+        items: [{ label: "Announcements", to: "/organization/announcements" }],
+    },
+    {
         label: "Settings", icon: Settings,
         items: [{ label: "Profile", to: "/organization/profile" }],
     },
 ];
 
 export default function OrgLayout() {
-    return <PanelLayout menu={MENU} roleLabel="Organization" defaultOpen={["Home", "User Management"]} />;
+    return <PanelLayout menu={MENU} roleLabel="Organization" defaultOpen={["Home", "User Management", "Communication"]} />;
 }

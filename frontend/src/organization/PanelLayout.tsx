@@ -3,9 +3,10 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronUp, PanelLeft, LogOut } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { supabase } from "../supabase";
+import { useSidebar, SidebarBackdrop } from "../sidebar";
+import { ThemeToggle } from "../theme";
 import "../dash.css";
 import "../admin.css";
-import {ThemeToggle} from "../theme.tsx";
 
 export type Item = { label: string; to: string };
 export type Group = { label: string; icon: LucideIcon; items: Item[] };
@@ -21,7 +22,7 @@ export default function PanelLayout({ menu, roleLabel, defaultOpen }: Props) {
     const navigate = useNavigate();
     const { pathname } = useLocation();
 
-    const [sideOpen, setSideOpen] = useState(true);
+    const { open: sideOpen, toggle: toggleSide, close: closeSide } = useSidebar();
     const [menuOpen, setMenuOpen] = useState(false);
     const [who, setWho] = useState("");
     const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(
@@ -74,10 +75,12 @@ export default function PanelLayout({ menu, roleLabel, defaultOpen }: Props) {
                 })}
             </aside>
 
+            <SidebarBackdrop open={sideOpen} onClose={closeSide} />
+
             <div className="adm-content">
                 <header className="adm-top">
                     <div className="adm-left">
-                        <button className="adm-icon-btn" onClick={() => setSideOpen(!sideOpen)} aria-label="Toggle sidebar">
+                        <button className="adm-icon-btn" onClick={toggleSide} aria-label="Toggle sidebar">
                             <PanelLeft size={18} />
                         </button>
                         <span>Home</span>

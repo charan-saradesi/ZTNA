@@ -12,17 +12,18 @@ import OrgLayout from "./organization/OrgLayout";
 import OrganizationDashboard from "./organization/OrganizationDashboard";
 import GroupsPage from "./organization/GroupsPage";
 import UsersPage from "./organization/UsersPage";
+import AdminGroupsPage from "./AdminGroupsPage";
+import AdminUsersPage from "./AdminUsersPage";
+import AdminSessionsPage from "./AdminSessionsPage";
+import AnnouncementsPage from "./organization/AnnouncementsPage";
 import { RequireUser, RequireRole } from "./guards";
 import "./theme.css";
 import { initTheme } from "./theme";
-import AdminGroupsPage from "./AdminGroupsPage";
-import AdminUsersPage from "./AdminUsersPage";
 
-
-
-initTheme();
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY in .env");
+
+initTheme();
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
@@ -48,6 +49,7 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="organizations" element={<OrganizationsPage />} />
                         <Route path="groups" element={<AdminGroupsPage />} />
                         <Route path="users" element={<AdminUsersPage />} />
+                        <Route path="sessions" element={<AdminSessionsPage />} />
                         <Route path="*" element={<ComingSoon />} />
                     </Route>
 
@@ -57,6 +59,7 @@ createRoot(document.getElementById("root")!).render(
                         <Route path="dashboard" element={<OrganizationDashboard />} />
                         <Route path="groups" element={<GroupsPage />} />
                         <Route path="users" element={<UsersPage />} />
+                        <Route path="announcements" element={<AnnouncementsPage />} />
                         <Route path="*" element={<ComingSoon />} />
                     </Route>
 

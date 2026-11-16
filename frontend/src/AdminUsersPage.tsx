@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { RefreshCw, Search, ChevronRight, ChevronDown } from "lucide-react";
+import { RefreshCw, Search, ChevronRight, ChevronDown, Power, RotateCcw, Users as UsersIcon } from "lucide-react";
 import { useAdminData, invokeFn, groupLabel, fullName } from "./adminData";
 import type { Usr } from "./adminData";
+import { EmptyState, TableSkeleton, HealthBar, healthOf, isDisabled } from "./ui";
 import "./admin.css";
 import "./adminviews.css";
 
@@ -12,37 +13,47 @@ type TableProps = {
     showGroup: boolean;
     groupName: Map<string, string>;
     onDelete: (u: Usr) => void;
+    onToggle: (u: Usr) => void;
+    onResetHealth: (u: Usr) => void;
 };
 
-function UserTable({ list, showGroup, groupName, onDelete }: TableProps) {
+function UserTable({ list, showGroup, groupName, onDelete, onToggle, onResetHealth }: TableProps) {
     return (
         <div className="av-inner">
-            <table className="tbl">
+            <table className="tbl" style={{ minWidth: 860 }}>
                 <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    {showGroup && <th>Group</th>}
-                    <th>Added</th>
-                    <th style={{ textAlign: "right" }}>Action</th>
-                </tr>
+                    <tr>
+                        <th>Username</th>
+                        <th>Status</th>
+                        <th>Health</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        {showGroup && <th>Group</th>}
+                        <th>Added</th>
+                        <th style={{ textAlign: "right" }}>Action</th>
+                    </tr>
                 </thead>
                 <tbody>
-                {list.map((u) => (
-                    <tr key={u.clerk_user_id}>
-                        <td>{u.username}</td>
-                        <td>{fullName(u) || "—"}</td>
-                        <td>{u.email ?? "—"}</td>
-                        {showGroup && <td>{u.group_id ? groupName.get(u.group_id) ?? "—" : "No group"}</td>}
-                        <td className="num">{new Date(u.created_at).toLocaleString()}</td>
-                        <td>
-                            <div className="act">
-                                <button className="btn sm danger" onClick={() => onDelete(u)}>Delete</button>
-                            </div>
-                        </td>
-                    </tr>
-                ))}
+                    {list.map((u) => (
+                        <tr key={u.clerk_user_id}>
+                            <td>{u.username}</td>
+                            <td><span className={`av-badge ${isDisabled(u) ? "disabled" : "active"}`}>{isDisabled(u) ? "Disabled" : "Active"}</span></td>
+                            <td><HealthBar user={u} /></td>
+                            <td>{fullName(u) || "—"}</td>
+                            <td>{u.email ?? "—"}</td>
+                            {showGroup && <td>{u.group_id ? groupName.get(u.group_id) ?? "—" : "No group"}</td>}
+                            <td className="num">{new Date(u.created_at).toLocaleString()}</td>
+                            <td>
+                                <div className="act">
+                                    <button className="btn sm" onClick={() => onToggle(u)} title={isDisabled(u) ? "Enable user" : "Disable user"}><Power size={14} /></button>
+                                    {healthOf(u).attempts > 0 && (
+                                        <button className="btn sm" onClick={() => onResetHealth(u)} title="Reset health"><RotateCcw size={14} /></button>
+                                    )}
+                                    <button className="btn sm danger" onClick={() => onDelete(u)}>Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
                 </tbody>
             </table>
         </div>
@@ -57,6 +68,7 @@ export default function AdminUsersPage() {
     const [view, setView] = useState<View>("grouped");
     const [closed, setClosed] = useState<Set<string>>(new Set()); // collapsed organizations
     const [actionError, setActionError] = useState("");
+    const [status, setStatus] = useState("all"); // all | active | disabled | low
 
     const groupName = useMemo(() => {
         const m = new Map<string, string>();
@@ -69,6 +81,7 @@ export default function AdminUsersPage() {
         return users.filter(
             (u) =>
                 (!org || u.org_name === org) &&
+                (status === "all" || (status === "disabled" ? isDisabled(u) : status === "active" ? !isDisabled(u) : healthOf(u).score < 80)) &&
                 (!t ||
                     u.username.toLowerCase().includes(t) ||
                     fullName(u).toLowerCase().includes(t) ||
@@ -76,7 +89,7 @@ export default function AdminUsersPage() {
                     u.org_name.toLowerCase().includes(t) ||
                     (u.group_id ? (groupName.get(u.group_id) ?? "").toLowerCase().includes(t) : false))
         );
-    }, [users, q, org, groupName]);
+    }, [users, q, org, status, groupName]);
 
     // Organization -> group -> users
     const tree = useMemo(() => {
@@ -110,6 +123,22 @@ export default function AdminUsersPage() {
         else await reload();
     };
 
+    const toggle = async (u: Usr) => {
+        setActionError("");
+        const next = isDisabled(u) ? "active" : "disabled";
+        if (next === "disabled" && !window.confirm(`Disable "${u.username}"? They will be signed out and can't sign in until enabled again.`)) return;
+        const msg = await invokeFn("manage-user", { action: "set_status", clerk_user_id: u.clerk_user_id, status: next });
+        if (msg) setActionError(msg);
+        else await reload();
+    };
+
+    const resetHealth = async (u: Usr) => {
+        setActionError("");
+        const msg = await invokeFn("manage-user", { action: "reset_health", clerk_user_id: u.clerk_user_id });
+        if (msg) setActionError(msg);
+        else await reload();
+    };
+
     const error = actionError || loadError;
 
     return (
@@ -137,6 +166,12 @@ export default function AdminUsersPage() {
                             <option key={o.id} value={o.name}>{o.display_name || o.name}</option>
                         ))}
                     </select>
+                    <select className="av-select" value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Filter by status">
+                        <option value="all">All users</option>
+                        <option value="active">Active</option>
+                        <option value="disabled">Disabled</option>
+                        <option value="low">Low health</option>
+                    </select>
                     <div className="pg-search">
                         <Search size={15} />
                         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search users" />
@@ -149,19 +184,21 @@ export default function AdminUsersPage() {
 
             {error && <p className="err">{error}</p>}
 
-            {loading && <div className="tbl-wrap"><div className="empty">Loading…</div></div>}
+            {loading && <div className="tbl-wrap"><TableSkeleton /></div>}
 
             {!loading && filtered.length === 0 && (
                 <div className="tbl-wrap">
-                    <div className="empty">
-                        {q || org ? "No matching users" : "No users yet. Organizations add users from their own panel."}
-                    </div>
+                    <EmptyState
+                        icon={UsersIcon}
+                        title={q || org || status !== "all" ? "No matching users" : "No users yet"}
+                        text={q || org || status !== "all" ? "Try a different search or clear the filters." : "Organizations add their users from their own panel."}
+                    />
                 </div>
             )}
 
             {!loading && filtered.length > 0 && view === "flat" && (
                 <div className="av-sec" style={{ padding: 16 }}>
-                    <UserTable list={filtered} showGroup groupName={groupName} onDelete={remove} />
+                    <UserTable list={filtered} showGroup groupName={groupName} onDelete={remove} onToggle={toggle} onResetHealth={resetHealth} />
                 </div>
             )}
 
@@ -190,7 +227,7 @@ export default function AdminUsersPage() {
                                                     {b.title}
                                                     <span className="av-count">{b.users.length}</span>
                                                 </div>
-                                                <UserTable list={b.users} showGroup={false} groupName={groupName} onDelete={remove} />
+                                                <UserTable list={b.users} showGroup={false} groupName={groupName} onDelete={remove} onToggle={toggle} onResetHealth={resetHealth} />
                                             </div>
                                         ))}
                                     </div>

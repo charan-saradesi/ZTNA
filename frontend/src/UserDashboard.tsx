@@ -5,8 +5,10 @@ import {
     LogOut, ChevronDown, Building2, Users, CalendarDays, Mail, FolderOpen, MessageSquare,
     LifeBuoy, Laptop, Receipt, BookOpen, KeyRound, Loader2,
 } from "lucide-react";
+import { useAnnouncements } from "./announcements";
+import { timeAgo } from "./ui";
+import { ThemeToggle } from "./theme";
 import "./userdash.css";
-import {ThemeToggle} from "./theme.tsx";
 
 // ---- Sample content: replace with real data later ----
 const TILES = [
@@ -18,12 +20,6 @@ const TILES = [
     { icon: Laptop, title: "IT Support", note: "Request help" },
     { icon: BookOpen, title: "Handbook", note: "Policies & guides" },
     { icon: LifeBuoy, title: "Help Desk", note: "Ask a question" },
-];
-
-const ANNOUNCEMENTS = [
-    { title: "Welcome to the new employee portal", body: "Your single place for apps, documents and company news.", when: "Today" },
-    { title: "Security reminder", body: "Use a strong, unique password and never share it with anyone.", when: "2 days ago" },
-    { title: "Holiday calendar published", body: "Next year's company holidays are now available in the Handbook.", when: "Last week" },
 ];
 
 type Meta = { org_name?: string; group_name?: string };
@@ -41,6 +37,7 @@ const errText = (e: unknown) => {
 export default function UserDashboard() {
     const { user } = useUser();
     const { signOut } = useClerk();
+    const { items: news, loading: newsLoading } = useAnnouncements();
 
     const [now, setNow] = useState(new Date());
     const [menuOpen, setMenuOpen] = useState(false);
@@ -98,7 +95,6 @@ export default function UserDashboard() {
                     {meta.org_name && <span className="ud-org">{meta.org_name}</span>}
                 </div>
 
-
                 <div className="ud-user">
                     <ThemeToggle />
                     <button className="ud-user-btn" onClick={() => setMenuOpen(!menuOpen)}>
@@ -111,7 +107,6 @@ export default function UserDashboard() {
                             <button onClick={() => { setMenuOpen(false); setPwOpen(true); }}>
                                 <KeyRound size={15} /> Change password
                             </button>
-
                             <button onClick={() => signOut({ redirectUrl: "/login" })}>
                                 <LogOut size={15} /> Sign out
                             </button>
@@ -165,17 +160,20 @@ export default function UserDashboard() {
                         <section className="ud-card">
                             <div className="ud-card-head">
                                 <h2>Announcements</h2>
-                                <span className="ud-tag">Sample</span>
                             </div>
                             <div className="ud-list">
-                                {ANNOUNCEMENTS.map((a) => (
-                                    <div key={a.title} className="ud-item">
+                                {newsLoading && <p style={{ margin: 0, fontSize: 14, color: "var(--mut)" }}>Loading…</p>}
+                                {!newsLoading && news.length === 0 && (
+                                    <p style={{ margin: 0, fontSize: 14, color: "var(--mut)" }}>No announcements right now.</p>
+                                )}
+                                {news.map((a) => (
+                                    <div key={a.id} className="ud-item">
                                         <span className="ud-dot" />
                                         <div>
                                             <h3>{a.title}</h3>
-                                            <p>{a.body}</p>
+                                            {a.body && <p>{a.body}</p>}
                                         </div>
-                                        <time>{a.when}</time>
+                                        <time>{timeAgo(a.created_at)}</time>
                                     </div>
                                 ))}
                             </div>

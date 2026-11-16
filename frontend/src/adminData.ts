@@ -40,6 +40,10 @@ export type Usr = {
     last_name: string | null;
     email: string | null;
     created_at: string;
+    // columns added with features.sql (optional so pages still load before they exist)
+    status?: string | null; // "active" | "disabled"
+    failed_attempts?: number | null;
+    failed_since?: string | null;
 };
 
 // ---- Small helpers ----
@@ -73,6 +77,29 @@ export async function invokeFnDetailed(
         error: (data?.error as string | undefined) ?? "",
         warning: (data?.warning as string | undefined) ?? "",
     };
+}
+
+// ---- Calls an Edge Function and returns its data too (used by the Sessions page) ----
+export async function invokeFnData<T>(
+    name: string,
+    body: Record<string, unknown>
+): Promise<{ error: string; data: T | null }> {
+    const { data, error } = await supabase.functions.invoke(name, { body });
+    if (error) {
+        let msg = error.message;
+        const ctx = (error as { context?: Response }).context;
+        if (ctx) {
+            try {
+                const j = await ctx.json();
+                if (j?.error) msg = j.error as string;
+            } catch {
+                /* ignore */
+            }
+        }
+        return { error: msg, data: null };
+    }
+    if (data?.error) return { error: data.error as string, data: null };
+    return { error: "", data: data as T };
 }
 
 // ---- Same call, but returns just the error message ("" on success) ----
